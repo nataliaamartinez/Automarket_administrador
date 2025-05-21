@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<GridPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.LoginController"
+          hgap="10" vgap="15" alignment="CENTER" prefWidth="400" prefHeight="300">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <!-- Usuario -->
+    <Label text="Usuario:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+    <TextField fx:id="usuarioField" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+    <!-- Contraseña -->
+    <Label text="Contraseña:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+    <HBox spacing="5" GridPane.rowIndex="1" GridPane.columnIndex="1" alignment="CENTER_LEFT">
+        <StackPane>
+            <PasswordField fx:id="contrasenaField" promptText="Contraseña" />
+            <TextField fx:id="visiblePasswordField" promptText="Contraseña" visible="false" managed="false" />
+        </StackPane>
+        <Button fx:id="toggleVisibilityButton" text="👁" onAction="#togglePasswordVisibility" />
+    </HBox>
+
+    <!-- Botones -->
+    <HBox spacing="10" alignment="CENTER" GridPane.rowIndex="2" GridPane.columnIndex="1">
+        <Button text="Acceder" onAction="#acceder" />
+        <Button text="Salir" onAction="#salir" />
+    </HBox>
+
+    <!-- Estado -->
+    <Label fx:id="statusLabel" textFill="red" GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.columnSpan="2" />
+</GridPane>

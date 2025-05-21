@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.PantallaPrincipalController">
+
+    <top>
+        <HBox alignment="CENTER_RIGHT" spacing="10">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10" />
+            </padding>
+            <children>
+                <Label style="-fx-font-size: 18px;" text="Bienvenido al sistema principal" HBox.hgrow="ALWAYS" />
+                <Button fx:id="cerrarSesionButton" onAction="#cerrarSesion" text="Cerrar sesión" />
+            </children>
+        </HBox>
+    </top>
+
+    <center>
+        <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
+            <tabs>
+                <Tab text="Usuario">
+                    <AnchorPane>
+                        <TableView fx:id="tableUsuario" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+                                   AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+                            <columns>
+                                <TableColumn fx:id="colIdUsuario" prefWidth="50" text="ID" />
+                                <TableColumn fx:id="colNombreUsuario" prefWidth="150" text="Nombre" />
+                                <TableColumn fx:id="colEmailUsuario" prefWidth="200" text="Email" />
+                            </columns>
+                        </TableView>
+                    </AnchorPane>
+                </Tab>
+
+                <Tab text="Vehiculo">
+                    <AnchorPane>
+                        <TableView fx:id="tableVehiculo" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+                                   AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+                            <columns>
+                                <TableColumn fx:id="colIdVehiculo" prefWidth="50" text="ID" />
+                                <TableColumn fx:id="colMarcaVehiculo" prefWidth="100" text="Marca" />
+                                <TableColumn fx:id="colModeloVehiculo" prefWidth="100" text="Modelo" />
+                                <TableColumn fx:id="colAnioVehiculo" prefWidth="60" text="Año" />
+                                <TableColumn fx:id="colPropietarioIdVehiculo" prefWidth="100" text="Propietario ID" />
+                            </columns>
+                        </TableView>
+                    </AnchorPane>
+                </Tab>
+
+                <Tab text="Anuncio">
+                    <AnchorPane>
+                        <TableView fx:id="tableAnuncio" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+                                   AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" />
+                    </AnchorPane>
+                </Tab>
+
+                <Tab text="Archivo">
+                    <AnchorPane>
+                        <TableView fx:id="tableArchivo" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+                                   AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" />
+                    </AnchorPane>
+                </Tab>
+
+                <Tab text="Coche">
+                    <AnchorPane>
+                        <TableView fx:id="tableCoche" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+                                   AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" />
+                    </AnchorPane>
+                </Tab>
+
+                <Tab text="Favorito">
+                    <AnchorPane>
+                        <TableView fx:id="tableFavorito" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+                                   AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" />
+                    </AnchorPane>
+                </Tab>
+
+                <Tab text="Furgoneta">
+                    <AnchorPane>
+                        <TableView fx:id="tableFurgoneta" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+                                   AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" />
+                    </AnchorPane>
+                </Tab>
+
+                <Tab text="Moto">
+                    <AnchorPane>
+                        <TableView fx:id="tableMoto" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+                                   AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" />
+                    </AnchorPane>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </center>
+
+    <bottom>
+        <HBox fx:id="actionButtonsBox" spacing="10" alignment="CENTER">
+            <padding>
+                <Insets top="10" bottom="10" left="10" right="10"/>
+            </padding>
+        </HBox>
+    </bottom>
+</BorderPane>
