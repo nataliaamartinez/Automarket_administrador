@@ -100,6 +100,10 @@
             <padding>
                 <Insets top="10" bottom="10" left="10" right="10"/>
             </padding>
+            <children>
+                <Button fx:id="guardarCambiosButton" text="Guardar Cambios" />
+                <Button fx:id="exportarTXTButton" text="Exportar Datos" onAction="#exportarDatos" />
+            </children>
         </HBox>
     </bottom>
 </BorderPane>

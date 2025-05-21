@@ -9,26 +9,23 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.*;
-
-import javax.swing.text.Document;
 
 import com.example.Modelo.*;
 
 public class PantallaPrincipalController {
 
-     @FXML private Button cerrarSesionButton;
+    @FXML private Button cerrarSesionButton;
     @FXML private Button guardarCambiosButton;
-    @FXML private Button exportarPDFButton;
+    @FXML private Button exportarTXTButton;
     @FXML private TextField buscarUsuarioField;
 
     @FXML private TableView<Anuncio> tableAnuncio;
@@ -42,7 +39,6 @@ public class PantallaPrincipalController {
 
     @FXML private TabPane tabPane;
     @FXML private HBox actionButtonsBox;
-    @FXML private HBox topButtonsBox;
 
     private Connection connection;
 
@@ -52,6 +48,7 @@ public class PantallaPrincipalController {
             connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/automarket_", "root", "");
         } catch (SQLException e) {
             e.printStackTrace();
+            mostrarAlerta("No se pudo conectar a la base de datos.");
             return;
         }
 
@@ -65,25 +62,48 @@ public class PantallaPrincipalController {
         actualizarBotonesPorPestana(tabPane.getSelectionModel().getSelectedItem());
 
         guardarCambiosButton.setOnAction(e -> guardarCambios());
-        exportarPDFButton.setOnAction(e -> exportarAPDF());
+        exportarTXTButton.setOnAction(e -> exportarATXT());
     }
 
     private void guardarCambios() {
-        // Aquí puedes implementar lógica para sincronizar con la base de datos si hay cambios.
-        // Como el código actual carga siempre desde la base, no hay lógica de edición en memoria aún.
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Guardar Cambios");
-        alert.setHeaderText(null);
-        alert.setContentText("Todos los cambios han sido guardados.");
-        alert.showAndWait();
+        // Aquí se implementaría la lógica para guardar los cambios reales
+        mostrarAlertaInfo("Todos los cambios han sido guardados.");
     }
 
-    private void exportarAPDF() {
-       //exportar todas las tablas a pdf y guardarlo en una carpeta determinada
+    private void exportarATXT() {
+        String outputDir = "C:/AutomarketTXTs";
+        File dir = new File(outputDir);
+        if (!dir.exists()) dir.mkdirs();
+
+        try {
+            exportarTablaTXT("Usuarios", tableUsuario.getItems(), outputDir + "/usuarios.txt");
+            exportarTablaTXT("Vehículos", tableVehiculo.getItems(), outputDir + "/vehiculos.txt");
+            exportarTablaTXT("Anuncios", tableAnuncio.getItems(), outputDir + "/anuncios.txt");
+            exportarTablaTXT("Archivos", tableArchivo.getItems(), outputDir + "/archivos.txt");
+            exportarTablaTXT("Coches", tableCoche.getItems(), outputDir + "/coches.txt");
+            exportarTablaTXT("Favoritos", tableFavorito.getItems(), outputDir + "/favoritos.txt");
+            exportarTablaTXT("Furgonetas", tableFurgoneta.getItems(), outputDir + "/furgonetas.txt");
+            exportarTablaTXT("Motos", tableMoto.getItems(), outputDir + "/motos.txt");
+
+            mostrarAlertaInfo("Todos los datos han sido exportados a TXT en: " + outputDir);
+        } catch (IOException e) {
+            e.printStackTrace();
+            mostrarAlerta("Error al exportar a TXT: " + e.getMessage());
+        }
     }
 
-    private void importarpdf(){
-        //importar un pdf y cargarlo en la tabla correspondiente
+    private <T> void exportarTablaTXT(String titulo, ObservableList<T> datos, String rutaSalida) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(rutaSalida))) {
+            writer.write(titulo);
+            writer.newLine();
+            writer.write("------------------------");
+            writer.newLine();
+
+            for (T item : datos) {
+                writer.write(item.toString());
+                writer.newLine();
+            }
+        }
     }
 
     private void actualizarBotonesPorPestana(Tab tabActiva) {
@@ -119,7 +139,9 @@ public class PantallaPrincipalController {
 
                 actionButtonsBox.getChildren().addAll(agregarBtn, editarBtn, eliminarBtn);
                 break;
-            // Otros casos no modificados
+
+            // Aquí puedes agregar más casos para otras pestañas si lo deseas
+
             default:
                 actionButtonsBox.getChildren().add(new Label("Sin acciones disponibles."));
         }
@@ -184,6 +206,7 @@ public class PantallaPrincipalController {
             stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+            mostrarAlerta("Error al agregar usuario: " + e.getMessage());
         }
     }
 
@@ -197,6 +220,7 @@ public class PantallaPrincipalController {
             stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+            mostrarAlerta("Error al actualizar usuario: " + e.getMessage());
         }
     }
 
@@ -208,6 +232,7 @@ public class PantallaPrincipalController {
             cargarTablaUsuario();
         } catch (SQLException e) {
             e.printStackTrace();
+            mostrarAlerta("Error al eliminar usuario: " + e.getMessage());
         }
     }
 
@@ -219,8 +244,13 @@ public class PantallaPrincipalController {
         alert.showAndWait();
     }
 
-
-    // ... Resto de métodos como configurarColumnas(), cargarDatos() etc. permanecen sin cambios
+    private void mostrarAlertaInfo(String mensaje) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Información");
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
+    }
 
     private void configurarColumnas() {
         configurarColumnasAnuncio();
@@ -332,17 +362,19 @@ public class PantallaPrincipalController {
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
+                Integer archivoId = rs.getObject("archivo_id") != null ? rs.getInt("archivo_id") : null;
                 lista.add(new Anuncio(
                     rs.getInt("id"),
                     rs.getInt("vehiculo_id"),
                     rs.getDouble("precio"),
                     rs.getString("descripcion"),
                     rs.getInt("vendedor_id"),
-                    rs.getObject("archivo_id") != null ? rs.getInt("archivo_id") : null
+                    archivoId
                 ));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            mostrarAlerta("Error al cargar anuncios: " + e.getMessage());
         }
         tableAnuncio.setItems(lista);
     }
@@ -357,6 +389,7 @@ public class PantallaPrincipalController {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            mostrarAlerta("Error al cargar archivos: " + e.getMessage());
         }
         tableArchivo.setItems(lista);
     }
@@ -371,6 +404,7 @@ public class PantallaPrincipalController {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            mostrarAlerta("Error al cargar coches: " + e.getMessage());
         }
         tableCoche.setItems(lista);
     }
@@ -389,6 +423,7 @@ public class PantallaPrincipalController {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            mostrarAlerta("Error al cargar favoritos: " + e.getMessage());
         }
         tableFavorito.setItems(lista);
     }
@@ -399,10 +434,11 @@ public class PantallaPrincipalController {
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                lista.add(new Furgoneta(rs.getInt("id"), rs.getDouble("capacidadCarga")));
+                lista.add(new Furgoneta(rs.getInt("id"), rs.getDouble("capacidadcarga")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            mostrarAlerta("Error al cargar furgonetas: " + e.getMessage());
         }
         tableFurgoneta.setItems(lista);
     }
@@ -417,6 +453,7 @@ public class PantallaPrincipalController {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            mostrarAlerta("Error al cargar motos: " + e.getMessage());
         }
         tableMoto.setItems(lista);
     }
@@ -436,6 +473,7 @@ public class PantallaPrincipalController {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            mostrarAlerta("Error al cargar usuarios: " + e.getMessage());
         }
         tableUsuario.setItems(lista);
     }
@@ -452,28 +490,29 @@ public class PantallaPrincipalController {
                     rs.getString("modelo"),
                     rs.getInt("año"),
                     rs.getInt("kilometraje"),
-                    rs.getObject("usuario_id") != null ? rs.getInt("usuario_id") : null
+                    rs.getInt("usuario_id")
                 ));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            mostrarAlerta("Error al cargar vehículos: " + e.getMessage());
         }
         tableVehiculo.setItems(lista);
+    }
+    @FXML
+    private void exportarDatos(ActionEvent event) {
+        // Código para exportar datos
     }
 
     @FXML
     private void cerrarSesion() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("login.fxml"));
-            Parent root = loader.load();
+            Parent root = FXMLLoader.load(getClass().getResource("Login.fxml"));
             Stage stage = (Stage) cerrarSesionButton.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.setTitle("Inicio de Sesión");
-            stage.show();
+            stage.setScene(new Scene(root));
         } catch (IOException e) {
             e.printStackTrace();
+            mostrarAlerta("No se pudo cargar la pantalla de login.");
         }
     }
-
 }
