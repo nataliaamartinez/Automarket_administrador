@@ -44,19 +44,22 @@ public class LoginController {
             statusLabel.setText("¡Bienvenido, administrador!");
 
             try {
-                URL resource = getClass().getResource("/com/example/pantallaPrincipal.fxml");
-                System.out.println("Ruta recurso: " + resource);  // debug
-
-                if (resource == null) {
+                URL fxmlUrl = getClass().getResource("/com/example/pantallaPrincipal.fxml");
+                if (fxmlUrl == null) {
                     statusLabel.setText("No se encontró pantallaPrincipal.fxml");
                     return;
                 }
 
-                FXMLLoader loader = new FXMLLoader(resource);
+                FXMLLoader loader = new FXMLLoader(fxmlUrl);
                 Parent root = loader.load();
 
+                Scene scene = new Scene(root);
+
+        
+
                 Stage stage = (Stage) usuarioField.getScene().getWindow();
-                stage.setScene(new Scene(root));
+                stage.setScene(scene);
+                stage.setTitle("Pantalla Principal");
                 stage.show();
 
             } catch (Exception e) {

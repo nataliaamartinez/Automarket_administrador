@@ -13,15 +13,25 @@ public class App extends Application {
     @Override
     public void start(Stage stage) {
         try {
-            URL resource = getClass().getResource("/com/example/login.fxml");
-            if (resource == null) {
+            
+
+            // Cargar el FXML
+            URL fxmlResource = getClass().getResource("/com/example/login.fxml");
+            if (fxmlResource == null) {
                 System.err.println("No se encontró login.fxml");
                 return;
             }
-            Parent root = FXMLLoader.load(resource);
+
+            Parent root = FXMLLoader.load(fxmlResource);
+            Scene scene = new Scene(root);
+
+    
+
+            // Mostrar ventana
             stage.setTitle("AutoMarket - Login");
-            stage.setScene(new Scene(root));
+            stage.setScene(scene);
             stage.show();
+
         } catch (Exception e) {
             e.printStackTrace();
         }

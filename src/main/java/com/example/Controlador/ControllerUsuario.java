@@ -6,8 +6,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Optional;
 
-import com.example.Modelo.Anuncio;
 import com.example.Modelo.Usuario;
 
 import javafx.collections.FXCollections;
@@ -103,11 +103,20 @@ public class ControllerUsuario {
     }
 
     public void eliminarUsuario(Usuario u, Runnable onSuccess) {
-        if (u == null || u.getId() == null) {
-            mostrarAlerta("El usuario a eliminar no es válido.");
-            return;
-        }
+    if (u == null || u.getId() == null) {
+        mostrarAlerta("El usuario a eliminar no es válido.");
+        return;
+    }
 
+    // Alerta de confirmación
+    Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+    confirmacion.setTitle("Confirmar eliminación");
+    confirmacion.setHeaderText("¿Estás seguro que quieres eliminar este usuario?");
+    confirmacion.setContentText("Se eliminarán también todos los anuncios y vehículos asociados a este usuario.");
+
+    Optional<ButtonType> resultado = confirmacion.showAndWait();
+    if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
+        // Si el usuario confirma, se procede a eliminar
         String sql = "DELETE FROM usuario WHERE id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, u.getId());
@@ -122,7 +131,10 @@ public class ControllerUsuario {
             e.printStackTrace();
             mostrarAlerta("Error al eliminar usuario: " + e.getMessage());
         }
+    } else {
+        mostrarAlerta("Eliminación cancelada.");
     }
+}
 
     private void mostrarAlerta(String mensaje) {
         Alert alert = new Alert(Alert.AlertType.ERROR);

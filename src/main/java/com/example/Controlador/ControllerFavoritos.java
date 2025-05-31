@@ -3,6 +3,7 @@ package com.example.Controlador;
 import com.example.Modelo.Favorito;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 
@@ -130,4 +131,33 @@ public class ControllerFavoritos {
         alert.setContentText(mensaje);
         alert.showAndWait();
     }
+    @FXML
+private void agregarFavorito() {
+   mostrarFormularioFavorito(null, () -> cargarTablaFavorito());
+}
+
+@FXML
+private void editarFavorito() {
+    var seleccionado = tableFavorito.getSelectionModel().getSelectedItem();
+    if (seleccionado == null) {
+        mostrarAlerta("Seleccione un favorito para editar.");
+        return;
+    }
+    mostrarFormularioFavorito(seleccionado, () -> cargarTablaFavorito());
+}
+
+@FXML
+private void eliminarFavorito() {
+    var seleccionado = tableFavorito.getSelectionModel().getSelectedItem();
+    if (seleccionado == null) {
+        mostrarAlerta("Seleccione un favorito para eliminar.");
+        return;
+    }
+    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Está seguro que desea eliminar el favorito?", ButtonType.YES, ButtonType.NO);
+    confirm.showAndWait().ifPresent(response -> {
+        if (response == ButtonType.YES) {
+            eliminarFavorito(seleccionado, () -> cargarTablaFavorito());
+        }
+    });
+}
 }

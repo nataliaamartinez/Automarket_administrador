@@ -1,17 +1,16 @@
 package com.example.Modelo;
 
 public class Anuncio {
-    private Integer id, vehiculoId, vendedorId, archivoId;
+    private Integer id, vehiculoId, vendedorId;
     private Double precio;
     private String descripcion;
 
-    public Anuncio(int id, int vehiculoId, double precio, String descripcion, int vendedorId, Integer archivoId) {
+    public Anuncio(int id, int vehiculoId, double precio, String descripcion, int vendedorId ) {
         this.id = id;
         this.vehiculoId = vehiculoId;
         this.precio = precio;
         this.descripcion = descripcion;
         this.vendedorId = vendedorId;
-        this.archivoId = archivoId;
     }
 
 
@@ -55,20 +54,13 @@ public class Anuncio {
         this.vendedorId = vendedorId;
     }
 
-    public Integer getArchivoId() {
-        return archivoId;
-    }
-
-    public void setArchivoId(Integer archivoId) {
-        this.archivoId = archivoId;
-    }
+ 
     @Override
     public String toString() {
         return "Anuncio{" +
                 "id=" + id +
                 ", vehiculoId=" + vehiculoId +
                 ", vendedorId=" + vendedorId +
-                ", archivoId=" + archivoId +
                 ", precio=" + precio +
                 ", descripcion='" + descripcion + '\'' +
                 '}';

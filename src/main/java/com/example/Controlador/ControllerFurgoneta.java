@@ -36,7 +36,7 @@ public class ControllerFurgoneta {
         if (furgoneta != null) {
             marcaField.setText(furgoneta.getMarca());
             modeloField.setText(furgoneta.getModelo());
-            anioField.setText(String.valueOf(furgoneta.getAnio()));
+            anioField.setText(String.valueOf(furgoneta.getAño()));
             kilometrajeField.setText(String.valueOf(furgoneta.getKilometraje()));
             usuarioIdField.setText(String.valueOf(furgoneta.getUsuarioId()));
             capacidadCargaField.setText(String.valueOf(furgoneta.getCapacidadcarga()));
@@ -128,14 +128,14 @@ public void agregarFurgoneta(Furgoneta f) {
     // Insert en vehiculo
     String sqlVehiculo = "INSERT INTO vehiculo (marca, modelo, anio, kilometraje, usuarioId) VALUES (?, ?, ?, ?, ?)";
     // Luego obtener el id generado para usarlo en furgoneta
-    String sqlFurgoneta = "INSERT INTO furgoneta (id, capacidadcarga) VALUES (?, ?)";
+    String sqlFurgoneta = "INSERT INTO furgoneta (id, capacidadCarga) VALUES (?, ?)";
     try {
         connection.setAutoCommit(false); // Transacción
 
         try (PreparedStatement stmtVehiculo = connection.prepareStatement(sqlVehiculo, Statement.RETURN_GENERATED_KEYS)) {
             stmtVehiculo.setString(1, f.getMarca());
             stmtVehiculo.setString(2, f.getModelo());
-            stmtVehiculo.setInt(3, f.getAnio());
+            stmtVehiculo.setInt(3, f.getAño());
             stmtVehiculo.setInt(4, f.getKilometraje());
             stmtVehiculo.setInt(5, f.getUsuarioId());
             stmtVehiculo.executeUpdate();
@@ -168,14 +168,14 @@ public void agregarFurgoneta(Furgoneta f) {
 
 public void actualizarFurgoneta(Furgoneta f) {
     String sqlVehiculo = "UPDATE vehiculo SET marca = ?, modelo = ?, anio = ?, kilometraje = ?, usuarioId = ? WHERE id = ?";
-    String sqlFurgoneta = "UPDATE furgoneta SET capacidadcarga = ? WHERE id = ?";
+    String sqlFurgoneta = "UPDATE furgoneta SET capacidadCarga = ? WHERE id = ?";
     try {
         connection.setAutoCommit(false);
 
         try (PreparedStatement stmtVehiculo = connection.prepareStatement(sqlVehiculo)) {
             stmtVehiculo.setString(1, f.getMarca());
             stmtVehiculo.setString(2, f.getModelo());
-            stmtVehiculo.setInt(3, f.getAnio());
+            stmtVehiculo.setInt(3, f.getAño());
             stmtVehiculo.setInt(4, f.getKilometraje());
             stmtVehiculo.setInt(5, f.getUsuarioId());
             stmtVehiculo.setInt(6, f.getId());
@@ -222,4 +222,5 @@ public void actualizarFurgoneta(Furgoneta f) {
         alert.setContentText(mensaje);
         alert.showAndWait();
     }
+    
 }

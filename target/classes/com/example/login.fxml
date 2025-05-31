@@ -1,36 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
 
-<GridPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.LoginController"
-          hgap="10" vgap="15" alignment="CENTER" prefWidth="400" prefHeight="300">
+<GridPane alignment="CENTER" hgap="10" prefHeight="300" prefWidth="400" styleClass="fondo-login" stylesheets="@../../css/estilo.css" vgap="15" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/22" fx:controller="com.example.LoginController">
 
     <padding>
-        <Insets top="20" right="20" bottom="20" left="20"/>
+        <Insets bottom="20" left="20" right="20" top="20" />
     </padding>
 
     <!-- Usuario -->
-    <Label text="Usuario:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
-    <TextField fx:id="usuarioField" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+    <Label styleClass="etiqueta" text="Usuario:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+    <TextField fx:id="usuarioField" styleClass="campo-texto" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
     <!-- Contraseña -->
-    <Label text="Contraseña:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
-    <HBox spacing="5" GridPane.rowIndex="1" GridPane.columnIndex="1" alignment="CENTER_LEFT">
+    <Label styleClass="etiqueta" text="Contraseña:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+    <HBox alignment="CENTER_LEFT" spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="1">
         <StackPane>
-            <PasswordField fx:id="contrasenaField" promptText="Contraseña" />
-            <TextField fx:id="visiblePasswordField" promptText="Contraseña" visible="false" managed="false" />
+            <PasswordField fx:id="contrasenaField" promptText="Contraseña" styleClass="campo-texto" />
+            <TextField fx:id="visiblePasswordField" managed="false" promptText="Contraseña" styleClass="campo-texto" visible="false" />
         </StackPane>
-        <Button fx:id="toggleVisibilityButton" text="👁" onAction="#togglePasswordVisibility" />
+        <Button fx:id="toggleVisibilityButton" onAction="#togglePasswordVisibility" styleClass="boton-ojo" text="👁" />
     </HBox>
 
     <!-- Botones -->
-    <HBox spacing="10" alignment="CENTER" GridPane.rowIndex="2" GridPane.columnIndex="1">
-        <Button text="Acceder" onAction="#acceder" />
-        <Button text="Salir" onAction="#salir" />
+    <HBox alignment="CENTER" spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="2">
+        <Button onAction="#acceder" styleClass="boton-principal" text="Acceder" />
+        <Button onAction="#salir" styleClass="boton-secundario" text="Salir" />
     </HBox>
 
     <!-- Estado -->
-    <Label fx:id="statusLabel" textFill="red" GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.columnSpan="2" />
+    <Label fx:id="statusLabel" styleClass="estado-label" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="3" />
+   <columnConstraints>
+      <ColumnConstraints />
+      <ColumnConstraints />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints />
+      <RowConstraints />
+      <RowConstraints />
+      <RowConstraints />
+   </rowConstraints>
 </GridPane>

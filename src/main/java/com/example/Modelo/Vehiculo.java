@@ -37,12 +37,12 @@ public class Vehiculo {
         this.modelo = modelo;
     }
 
-    public Integer getAnio() {
+    public Integer getAño() {
         return año;
     }
 
-    public void setAnio(Integer anio) {
-        this.año = anio;
+    public void setAño(Integer año) {
+        this.año = año;
     }
 
     public Integer getKilometraje() {

@@ -10,6 +10,7 @@ import com.example.Modelo.Moto;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
@@ -19,6 +20,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
 public class ControllerMoto {
+
     private final Connection connection;
     private final TableView<Moto> tableMoto;
 
@@ -27,24 +29,27 @@ public class ControllerMoto {
         this.tableMoto = tableMoto;
     }
 
-   public void cargarTablaMoto() {
-    ObservableList<Moto> lista = FXCollections.observableArrayList();
-    String sql = "SELECT id, cilindrada FROM moto";  // Solo estos campos existen
-    try (Statement stmt = connection.createStatement();
-         ResultSet rs = stmt.executeQuery(sql)) {
-        while (rs.next()) {
-            Moto m = new Moto(
-                rs.getInt("id"),
-                rs.getInt("cilindrada")
-            );
-            lista.add(m);
-        }
-    } catch (SQLException e) {
-        e.printStackTrace();
-        mostrarAlerta("Error al cargar motos: " + e.getMessage());
+    // Carga completa de motos, uniendo vehiculo + moto
+    public void cargarTablaMoto() {
+       ObservableList<Moto> lista = FXCollections.observableArrayList();
+String sql = "SELECT v.id, m.cilindrada FROM vehiculo v JOIN moto m ON v.id = m.id";
+
+try (Statement stmt = connection.createStatement();
+     ResultSet rs = stmt.executeQuery(sql)) {
+    while (rs.next()) {
+        Moto m = new Moto(
+            rs.getInt("id"),
+            rs.getInt("cilindrada")
+        );
+        lista.add(m);
     }
-    tableMoto.setItems(lista);
+} catch (SQLException e) {
+    e.printStackTrace();
+    mostrarAlerta("Error al cargar motos: " + e.getMessage());
 }
+
+tableMoto.setItems(lista);
+    }
 
     public void mostrarFormularioMoto(Moto moto) {
         Dialog<Moto> dialog = new Dialog<>();
@@ -60,7 +65,7 @@ public class ControllerMoto {
         if (moto != null) {
             marcaField.setText(moto.getMarca());
             modeloField.setText(moto.getModelo());
-            anioField.setText(String.valueOf(moto.getAnio()));
+            anioField.setText(String.valueOf(moto.getAño()));
             kilometrajeField.setText(String.valueOf(moto.getKilometraje()));
             usuarioIdField.setText(String.valueOf(moto.getUsuarioId()));
             cilindradaField.setText(String.valueOf(moto.getCilindrada()));
@@ -88,26 +93,25 @@ public class ControllerMoto {
 
         dialog.setResultConverter(button -> {
             if (button == ButtonType.OK) {
-                // Validar campos obligatorios
+                // Validar campos no vacíos
                 if (marcaField.getText().trim().isEmpty() || modeloField.getText().trim().isEmpty() ||
                     anioField.getText().trim().isEmpty() || kilometrajeField.getText().trim().isEmpty() ||
                     usuarioIdField.getText().trim().isEmpty() || cilindradaField.getText().trim().isEmpty()) {
                     mostrarAlerta("Todos los campos son obligatorios.");
                     return null;
                 }
-
                 try {
                     return new Moto(
                         moto != null ? moto.getId() : 0,
                         marcaField.getText().trim(),
                         modeloField.getText().trim(),
-                        parseEntero(anioField.getText().trim(), "Año"),
-                        parseEntero(kilometrajeField.getText().trim(), "Kilometraje"),
-                        parseEntero(usuarioIdField.getText().trim(), "Usuario ID"),
-                        parseEntero(cilindradaField.getText().trim(), "Cilindrada")
+                        Integer.parseInt(anioField.getText().trim()),
+                        Integer.parseInt(kilometrajeField.getText().trim()),
+                        Integer.parseInt(usuarioIdField.getText().trim()),
+                        Integer.parseInt(cilindradaField.getText().trim())
                     );
                 } catch (NumberFormatException e) {
-                    // El error se muestra en parseEntero, aquí solo retornamos null para no crear Moto
+                    mostrarAlerta("Por favor, ingrese valores numéricos válidos.");
                     return null;
                 }
             }
@@ -115,7 +119,7 @@ public class ControllerMoto {
         });
 
         dialog.showAndWait().ifPresent(m -> {
-            if (m == null) return; // Si hubo error de validación o cancelación no hacer nada
+            if (m == null) return;
 
             if (moto == null) {
                 agregarMoto(m);
@@ -126,55 +130,114 @@ public class ControllerMoto {
         });
     }
 
-    private int parseEntero(String texto, String campo) throws NumberFormatException {
-        try {
-            return Integer.parseInt(texto);
-        } catch (NumberFormatException e) {
-            mostrarAlerta("El campo \"" + campo + "\" debe ser un número entero válido.");
-            throw e;
-        }
-    }
-
+    // Agregar moto: Insert en vehiculo y luego en moto con id generado
     public void agregarMoto(Moto m) {
-        String sql = "INSERT INTO moto (marca, modelo, anio, kilometraje, usuarioId, cilindrada) VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, m.getMarca());
-            stmt.setString(2, m.getModelo());
-            stmt.setInt(3, m.getAnio());
-            stmt.setInt(4, m.getKilometraje());
-            stmt.setInt(5, m.getUsuarioId());
-            stmt.setInt(6, m.getCilindrada());
-            stmt.executeUpdate();
+        String sqlVehiculo = "INSERT INTO vehiculo (marca, modelo, anio, kilometraje, usuarioId) VALUES (?, ?, ?, ?, ?)";
+        String sqlMoto = "INSERT INTO moto (id, cilindrada) VALUES (?, ?)";
+
+        try {
+            connection.setAutoCommit(false);
+
+            try (PreparedStatement stmtVeh = connection.prepareStatement(sqlVehiculo, Statement.RETURN_GENERATED_KEYS)) {
+                stmtVeh.setString(1, m.getMarca());
+                stmtVeh.setString(2, m.getModelo());
+                stmtVeh.setInt(3, m.getAño());
+                stmtVeh.setInt(4, m.getKilometraje());
+                stmtVeh.setInt(5, m.getUsuarioId());
+                stmtVeh.executeUpdate();
+
+                ResultSet rsKeys = stmtVeh.getGeneratedKeys();
+                if (rsKeys.next()) {
+                    int idGenerado = rsKeys.getInt(1);
+
+                    try (PreparedStatement stmtMoto = connection.prepareStatement(sqlMoto)) {
+                        stmtMoto.setInt(1, idGenerado);
+                        stmtMoto.setInt(2, m.getCilindrada());
+                        stmtMoto.executeUpdate();
+                    }
+                }
+            }
+
+            connection.commit();
+            connection.setAutoCommit(true);
         } catch (SQLException e) {
+            try {
+                connection.rollback();
+                connection.setAutoCommit(true);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
             e.printStackTrace();
             mostrarAlerta("Error al agregar moto: " + e.getMessage());
         }
     }
 
+    // Actualizar moto y vehiculo
     public void actualizarMoto(Moto m) {
-        String sql = "UPDATE moto SET marca = ?, modelo = ?, anio = ?, kilometraje = ?, usuarioId = ?, cilindrada = ? WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, m.getMarca());
-            stmt.setString(2, m.getModelo());
-            stmt.setInt(3, m.getAnio());
-            stmt.setInt(4, m.getKilometraje());
-            stmt.setInt(5, m.getUsuarioId());
-            stmt.setInt(6, m.getCilindrada());
-            stmt.setInt(7, m.getId());
-            stmt.executeUpdate();
+        String sqlVehiculo = "UPDATE vehiculo SET marca = ?, modelo = ?, anio = ?, kilometraje = ?, usuarioId = ? WHERE id = ?";
+        String sqlMoto = "UPDATE moto SET cilindrada = ? WHERE id = ?";
+
+        try {
+            connection.setAutoCommit(false);
+
+            try (PreparedStatement stmtVeh = connection.prepareStatement(sqlVehiculo)) {
+                stmtVeh.setString(1, m.getMarca());
+                stmtVeh.setString(2, m.getModelo());
+                stmtVeh.setInt(3, m.getAño());
+                stmtVeh.setInt(4, m.getKilometraje());
+                stmtVeh.setInt(5, m.getUsuarioId());
+                stmtVeh.setInt(6, m.getId());
+                stmtVeh.executeUpdate();
+            }
+
+            try (PreparedStatement stmtMoto = connection.prepareStatement(sqlMoto)) {
+                stmtMoto.setInt(1, m.getCilindrada());
+                stmtMoto.setInt(2, m.getId());
+                stmtMoto.executeUpdate();
+            }
+
+            connection.commit();
+            connection.setAutoCommit(true);
         } catch (SQLException e) {
+            try {
+                connection.rollback();
+                connection.setAutoCommit(true);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
             e.printStackTrace();
             mostrarAlerta("Error al actualizar moto: " + e.getMessage());
         }
     }
 
+    // Eliminar moto: Primero eliminar de moto, luego de vehiculo
     public void eliminarMoto(Moto moto) {
-        String sql = "DELETE FROM moto WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, moto.getId());
-            stmt.executeUpdate();
+        String sqlMoto = "DELETE FROM moto WHERE id = ?";
+        String sqlVehiculo = "DELETE FROM vehiculo WHERE id = ?";
+
+        try {
+            connection.setAutoCommit(false);
+
+            try (PreparedStatement stmtMoto = connection.prepareStatement(sqlMoto)) {
+                stmtMoto.setInt(1, moto.getId());
+                stmtMoto.executeUpdate();
+            }
+
+            try (PreparedStatement stmtVeh = connection.prepareStatement(sqlVehiculo)) {
+                stmtVeh.setInt(1, moto.getId());
+                stmtVeh.executeUpdate();
+            }
+
+            connection.commit();
+            connection.setAutoCommit(true);
             cargarTablaMoto();
         } catch (SQLException e) {
+            try {
+                connection.rollback();
+                connection.setAutoCommit(true);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
             e.printStackTrace();
             mostrarAlerta("Error al eliminar moto: " + e.getMessage());
         }
@@ -186,5 +249,35 @@ public class ControllerMoto {
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.showAndWait();
+    }
+
+    @FXML
+    private void agregarMoto() {
+        mostrarFormularioMoto(null);
+    }
+
+    @FXML
+    private void editarMoto() {
+        Moto seleccionado = tableMoto.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAlerta("Seleccione una moto para editar.");
+            return;
+        }
+        mostrarFormularioMoto(seleccionado);
+    }
+
+    @FXML
+    private void eliminarMoto() {
+        Moto seleccionado = tableMoto.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAlerta("Seleccione una moto para eliminar.");
+            return;
+        }
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Está seguro que desea eliminar la moto?", ButtonType.YES, ButtonType.NO);
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.YES) {
+                eliminarMoto(seleccionado);
+            }
+        });
     }
 }

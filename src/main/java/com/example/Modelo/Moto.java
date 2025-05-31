@@ -4,8 +4,8 @@ public class Moto extends Vehiculo {
     private Integer cilindrada;
 
     // Constructor completo con todos los atributos
-    public Moto(Integer id, String marca, String modelo, Integer anio, Integer kilometraje, Integer usuarioId, Integer cilindrada) {
-        super(id, marca, modelo, anio, kilometraje, usuarioId);
+    public Moto(Integer id, String marca, String modelo, Integer año, Integer kilometraje, Integer usuarioId, Integer cilindrada) {
+        super(id, marca, modelo, año, kilometraje, usuarioId);
         this.cilindrada = cilindrada;
     }
 

@@ -1,0 +1,141 @@
+.fondo-login {
+    -fx-background-color: linear-gradient(to bottom right, #ffffff, #1a1a1a); /* blanco a negro */
+    -fx-padding: 20;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-font-family: "Segoe UI", sans-serif;
+}
+
+.etiqueta {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-font-family: "Segoe UI", sans-serif;
+}
+
+.campo-texto {
+    -fx-background-color: #2e2e2e;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #bbbbbb;
+    -fx-background-radius: 5;
+    -fx-border-color: #ff4d4d;
+    -fx-border-radius: 5;
+    -fx-font-family: "Segoe UI", sans-serif;
+}
+
+.boton-principal {
+    -fx-background-color: #ff1a1a;
+    -fx-text-fill: rgb(0, 0, 0);
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-font-family: "Segoe UI", sans-serif;
+}
+
+.boton-principal:hover {
+    -fx-background-color: #cc0000;
+    -fx-text-fill: #ffffff;
+}
+
+.boton-secundario {
+    -fx-background-color: #444;
+    -fx-text-fill: white;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-font-family: "Segoe UI", sans-serif;
+}
+
+.boton-secundario:hover {
+    -fx-background-color: #666;
+    -fx-text-fill: #ffdddd;
+}
+
+.boton-ojo {
+    -fx-background-color: transparent;
+    -fx-text-fill: #000000;
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+}
+
+.boton-ojo:hover {
+    -fx-text-fill: #ffffff;
+}
+
+.estado-label {
+    -fx-text-fill: #ff9999;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-alignment: center;
+    -fx-font-family: "Segoe UI", sans-serif;
+}
+
+/* Fondo principal */
+.root {
+    -fx-background-color: linear-gradient(to bottom right, #ffffff, #1a1a1a); /* blanco a negro */
+    -fx-font-family: "Segoe UI", sans-serif;
+}
+
+/* Barra superior y títulos */
+.label {
+    -fx-text-fill: black;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+    -fx-font-family: "Georgia", serif;
+}
+
+/* Botones generales */
+.button {
+    -fx-background-color: #ff1a1a;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-padding: 6 12;
+}
+
+.button:hover {
+    -fx-background-color: #cc0000;
+}
+
+/* Estilo para TableViews */
+.table-view {
+    -fx-background-color: #a69f9f;
+    -fx-table-cell-border-color: transparent;
+    -fx-control-inner-background: #8e8787;
+    -fx-text-fill: white;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #d1cece;
+}
+
+.table-view .column-header, .table-view .filler {
+    -fx-size: 28px;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: transparent transparent #555 transparent;
+}
+
+.table-view .label {
+    -fx-text-fill: black; /* cambiado de blanco a negro */
+    -fx-font-weight: bold;
+}
+
+/* Estilo para TabPane */
+.tab-pane {
+    -fx-tab-min-width: 100px;
+    -fx-tab-max-width: 200px;
+    -fx-tab-min-height: 30px;
+    -fx-tab-max-height: 30px;
+}
+
+.tab {
+    -fx-background-color: #660000;
+    -fx-text-base-color: rgb(255, 255, 255);
+}
+
+.tab:selected {
+    -fx-background-color: #990000;
+    -fx-font-weight: bold;
+}

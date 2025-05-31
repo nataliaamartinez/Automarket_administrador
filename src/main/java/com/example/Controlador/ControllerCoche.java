@@ -3,6 +3,7 @@ package com.example.Controlador;
 import com.example.Modelo.Coche;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 
@@ -49,7 +50,7 @@ public class ControllerCoche {
 
         TextField marcaField = new TextField();
         TextField modeloField = new TextField();
-        TextField anioField = new TextField();
+        TextField añoField = new TextField();
         TextField kilometrajeField = new TextField();
         TextField usuarioIdField = new TextField();
         TextField carroceriaField = new TextField();
@@ -57,7 +58,7 @@ public class ControllerCoche {
         if (coche != null) {
             marcaField.setText(coche.getMarca());
             modeloField.setText(coche.getModelo());
-            anioField.setText(String.valueOf(coche.getAnio()));
+            añoField.setText(String.valueOf(coche.getAño()));
             kilometrajeField.setText(String.valueOf(coche.getKilometraje()));
             usuarioIdField.setText(String.valueOf(coche.getUsuarioId()));
             carroceriaField.setText(coche.getCarroceria());
@@ -72,7 +73,7 @@ public class ControllerCoche {
         grid.add(new Label("Modelo:"), 0, 1);
         grid.add(modeloField, 1, 1);
         grid.add(new Label("Año:"), 0, 2);
-        grid.add(anioField, 1, 2);
+        grid.add(añoField, 1, 2);
         grid.add(new Label("Kilometraje:"), 0, 3);
         grid.add(kilometrajeField, 1, 3);
         grid.add(new Label("ID Usuario:"), 0, 4);
@@ -90,7 +91,7 @@ public class ControllerCoche {
                         coche != null ? coche.getId() : 0,
                         marcaField.getText(),
                         modeloField.getText(),
-                        Integer.parseInt(anioField.getText()),
+                        Integer.parseInt(añoField.getText()),
                         Integer.parseInt(kilometrajeField.getText()),
                         Integer.parseInt(usuarioIdField.getText()),
                         carroceriaField.getText()
@@ -113,11 +114,11 @@ public class ControllerCoche {
     }
 
     public void agregarCoche(Coche c) {
-        String sql = "INSERT INTO coche (marca, modelo, anio, kilometraje, usuarioId, carroceria) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO coche (marca, modelo, año, kilometraje, usuarioId, carroceria) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, c.getMarca());
             stmt.setString(2, c.getModelo());
-            stmt.setInt(3, c.getAnio());
+            stmt.setInt(3, c.getAño());
             stmt.setInt(4, c.getKilometraje());
             stmt.setInt(5, c.getUsuarioId());
             stmt.setString(6, c.getCarroceria());
@@ -129,11 +130,11 @@ public class ControllerCoche {
     }
 
     public void actualizarCoche(Coche c) {
-        String sql = "UPDATE coche SET marca = ?, modelo = ?, anio = ?, kilometraje = ?, usuarioId = ?, carroceria = ? WHERE id = ?";
+        String sql = "UPDATE coche SET marca = ?, modelo = ?, año = ?, kilometraje = ?, usuarioId = ?, carroceria = ? WHERE id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, c.getMarca());
             stmt.setString(2, c.getModelo());
-            stmt.setInt(3, c.getAnio());
+            stmt.setInt(3, c.getAño());
             stmt.setInt(4, c.getKilometraje());
             stmt.setInt(5, c.getUsuarioId());
             stmt.setString(6, c.getCarroceria());
@@ -164,4 +165,33 @@ public class ControllerCoche {
         alert.setContentText(mensaje);
         alert.showAndWait();
     }
+    @FXML
+private void agregarCoche() {
+    mostrarFormularioCoche(null, () -> cargarTablaCoche());
+}
+
+@FXML
+private void editarCoche() {
+    var seleccionado = tableCoche.getSelectionModel().getSelectedItem();
+    if (seleccionado == null) {
+        mostrarAlerta("Seleccione un coche para editar.");
+        return;
+    }
+    mostrarFormularioCoche(seleccionado, () -> cargarTablaCoche());
+}
+
+@FXML
+private void eliminarCoche() {
+    var seleccionado = tableCoche.getSelectionModel().getSelectedItem();
+    if (seleccionado == null) {
+        mostrarAlerta("Seleccione un coche para eliminar.");
+        return;
+    }
+    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Está seguro que desea eliminar el coche?", ButtonType.YES, ButtonType.NO);
+    confirm.showAndWait().ifPresent(response -> {
+        if (response == ButtonType.YES) {
+            eliminarCoche(seleccionado, () -> cargarTablaCoche());
+        }
+    });
+}
 }
