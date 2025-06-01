@@ -15,13 +15,13 @@ public class Furgoneta extends Vehiculo {
         this.capacidadCarga = capacidadCarga;
     }
 
-    public Double getCapacidadcarga() {
-        return capacidadCarga;
-    }
+    public Double getCapacidadCarga() {
+    return capacidadCarga;
+}
 
-    public void setCapacidadcarga(Double capacidadcarga) {
-        this.capacidadCarga = capacidadcarga;
-    }
+public void setCapacidadCarga(Double capacidadCarga) {
+    this.capacidadCarga = capacidadCarga;
+}
 
     @Override
     public String toString() {

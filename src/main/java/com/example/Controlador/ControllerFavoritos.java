@@ -54,9 +54,9 @@ public class ControllerFavoritos {
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
-        grid.add(new Label("ID Anuncio:"), 0, 0);
+        grid.add(new Label("ID del Anuncio:"), 0, 0);
         grid.add(anuncioIdField, 1, 0);
-        grid.add(new Label("ID Comprador:"), 0, 1);
+        grid.add(new Label("ID del Comprador:"), 0, 1);
         grid.add(compradorIdField, 1, 1);
 
         dialog.getDialogPane().setContent(grid);
@@ -67,11 +67,11 @@ public class ControllerFavoritos {
                 try {
                     return new Favorito(
                         favorito != null ? favorito.getId() : 0,
-                        Integer.parseInt(anuncioIdField.getText()),
-                        Integer.parseInt(compradorIdField.getText())
+                        Integer.parseInt(anuncioIdField.getText().trim()),
+                        Integer.parseInt(compradorIdField.getText().trim())
                     );
                 } catch (NumberFormatException e) {
-                    mostrarAlerta("Verifica los campos numéricos.");
+                    mostrarAlerta("Verifica que los campos sean números válidos.");
                 }
             }
             return null;
@@ -83,7 +83,7 @@ public class ControllerFavoritos {
             } else {
                 actualizarFavorito(f);
             }
-            onSuccess.run(); // Recargar tabla
+            onSuccess.run();
         });
     }
 
@@ -124,6 +124,61 @@ public class ControllerFavoritos {
         }
     }
 
+    public void mostrarDetalleFavorito(int favoritoId) {
+        String sql = """
+            SELECT a.id AS anuncio_id, a.precio, a.descripcion,
+                   v.marca, v.modelo, v.año, v.kilometraje,
+                   c.carroceria, f.capacidadCarga, m.cilindrada
+            FROM favorito fav
+            JOIN anuncio a ON fav.anuncio_id = a.id
+            JOIN vehiculo v ON a.vehiculo_id = v.id
+            LEFT JOIN coche c ON v.id = c.id
+            LEFT JOIN furgoneta f ON v.id = f.id
+            LEFT JOIN moto m ON v.id = m.id
+            WHERE fav.id = ?
+        """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, favoritoId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String tipoExtra = "";
+                if (rs.getString("carroceria") != null) {
+                    tipoExtra = "Carrocería: " + rs.getString("carroceria") + "\n";
+                } else if (rs.getObject("capacidadCarga") != null) {
+                    tipoExtra = "Capacidad de Carga: " + rs.getDouble("capacidadCarga") + " kg\n";
+                } else if (rs.getObject("cilindrada") != null) {
+                    tipoExtra = "Cilindrada: " + rs.getInt("cilindrada") + " cc\n";
+                } else {
+                    tipoExtra = "Tipo específico no disponible\n";
+                }
+
+                StringBuilder info = new StringBuilder();
+                info.append("🧡 Favorito ID: ").append(favoritoId).append("\n")
+                    .append("Anuncio ID: ").append(rs.getInt("anuncio_id")).append("\n")
+                    .append("Precio: €").append(rs.getBigDecimal("precio")).append("\n")
+                    .append("Descripción: ").append(rs.getString("descripcion")).append("\n\n")
+                    .append("🚗 Vehículo:\n")
+                    .append("Marca: ").append(rs.getString("marca")).append("\n")
+                    .append("Modelo: ").append(rs.getString("modelo")).append("\n")
+                    .append("Año: ").append(rs.getInt("año")).append("\n")
+                    .append("Kilometraje: ").append(rs.getInt("kilometraje")).append(" km\n")
+                    .append(tipoExtra);
+
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Detalles del Favorito");
+                alert.setHeaderText(null);
+                alert.setContentText(info.toString());
+                alert.getDialogPane().setPrefWidth(500);
+                alert.showAndWait();
+            } else {
+                mostrarAlerta("No se encontró información para el favorito seleccionado.");
+            }
+        } catch (SQLException e) {
+            mostrarAlerta("Error al obtener detalles del favorito: " + e.getMessage());
+        }
+    }
+
     private void mostrarAlerta(String mensaje) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
@@ -131,33 +186,34 @@ public class ControllerFavoritos {
         alert.setContentText(mensaje);
         alert.showAndWait();
     }
+
     @FXML
-private void agregarFavorito() {
-   mostrarFormularioFavorito(null, () -> cargarTablaFavorito());
-}
-
-@FXML
-private void editarFavorito() {
-    var seleccionado = tableFavorito.getSelectionModel().getSelectedItem();
-    if (seleccionado == null) {
-        mostrarAlerta("Seleccione un favorito para editar.");
-        return;
+    private void agregarFavorito() {
+        mostrarFormularioFavorito(null, this::cargarTablaFavorito);
     }
-    mostrarFormularioFavorito(seleccionado, () -> cargarTablaFavorito());
-}
 
-@FXML
-private void eliminarFavorito() {
-    var seleccionado = tableFavorito.getSelectionModel().getSelectedItem();
-    if (seleccionado == null) {
-        mostrarAlerta("Seleccione un favorito para eliminar.");
-        return;
-    }
-    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Está seguro que desea eliminar el favorito?", ButtonType.YES, ButtonType.NO);
-    confirm.showAndWait().ifPresent(response -> {
-        if (response == ButtonType.YES) {
-            eliminarFavorito(seleccionado, () -> cargarTablaFavorito());
+    @FXML
+    private void editarFavorito() {
+        var seleccionado = tableFavorito.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAlerta("Seleccione un favorito para editar.");
+            return;
         }
-    });
-}
+        mostrarFormularioFavorito(seleccionado, this::cargarTablaFavorito);
+    }
+
+    @FXML
+    private void eliminarFavorito() {
+        var seleccionado = tableFavorito.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAlerta("Seleccione un favorito para eliminar.");
+            return;
+        }
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Está seguro que desea eliminar el favorito?", ButtonType.YES, ButtonType.NO);
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.YES) {
+                eliminarFavorito(seleccionado, this::cargarTablaFavorito);
+            }
+        });
+    }
 }

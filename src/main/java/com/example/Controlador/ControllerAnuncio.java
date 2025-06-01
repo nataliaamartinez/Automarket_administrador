@@ -1,6 +1,5 @@
 package com.example.Controlador;
 
-
 import com.example.Modelo.Anuncio;
 
 import javafx.collections.FXCollections;
@@ -21,8 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ControllerAnuncio {
-
-    private final Connection connection;
+    public final Connection connection;
     private final TableView<Anuncio> tableAnuncio;
 
     public ControllerAnuncio(Connection connection, TableView<Anuncio> tableAnuncio) {
@@ -58,7 +56,6 @@ public class ControllerAnuncio {
         grid.add(descripcionArea, 1, 2);
         grid.add(new Label("Vendedor ID:"), 0, 3);
         grid.add(vendedorIdField, 1, 3);
-       
 
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -67,15 +64,14 @@ public class ControllerAnuncio {
             if (button == ButtonType.OK) {
                 try {
                     return new Anuncio(
-    anuncio != null ? anuncio.getId() : 0,
-    Integer.parseInt(vehiculoIdField.getText()),
-    Double.parseDouble(precioField.getText()),
-    descripcionArea.getText(),
-    Integer.parseInt(vendedorIdField.getText())
-);
+                        anuncio != null ? anuncio.getId() : 0,
+                        Integer.parseInt(vehiculoIdField.getText().trim()),
+                        Double.parseDouble(precioField.getText().trim()),
+                        descripcionArea.getText().trim(),
+                        Integer.parseInt(vendedorIdField.getText().trim())
+                    );
                 } catch (NumberFormatException e) {
                     mostrarAlerta("Campos numéricos inválidos.");
-                    return null;
                 }
             }
             return null;
@@ -92,7 +88,7 @@ public class ControllerAnuncio {
     }
 
     public void agregarAnuncio(Anuncio a) {
-        String sql = "INSERT INTO anuncio (vehiculo_id, precio, descripcion, vendedor_id, ) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO anuncio (vehiculo_id, precio, descripcion, vendedor_id) VALUES (?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, a.getVehiculoId());
             stmt.setDouble(2, a.getPrecio());
@@ -106,13 +102,13 @@ public class ControllerAnuncio {
     }
 
     public void actualizarAnuncio(Anuncio a) {
-        String sql = "UPDATE anuncio SET vehiculo_id = ?, precio = ?, descripcion = ?, vendedor_id = ?,  WHERE id = ?";
+        String sql = "UPDATE anuncio SET vehiculo_id = ?, precio = ?, descripcion = ?, vendedor_id = ? WHERE id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, a.getVehiculoId());
             stmt.setDouble(2, a.getPrecio());
             stmt.setString(3, a.getDescripcion());
             stmt.setInt(4, a.getVendedorId());
-            stmt.setInt(6, a.getId());
+            stmt.setInt(5, a.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -120,25 +116,64 @@ public class ControllerAnuncio {
         }
     }
 
-    public void eliminarAnuncio(Anuncio anuncio, Runnable onSuccess) {
-        if (anuncio == null || anuncio.getId() == null) {
-            mostrarAlerta("El anuncio a eliminar no es válido.");
-            return;
-        }
+    public void compararAnuncios(int id1, int id2) {
+        String sql = """
+            SELECT a.id AS anuncio_id, a.precio, a.descripcion,
+                   v.marca, v.modelo, v.año, v.kilometraje,
+                   u.nombre AS vendedor_nombre, u.email,
+                   c.carroceria, f.capacidadCarga, m.cilindrada
+            FROM anuncio a
+            JOIN vehiculo v ON a.vehiculo_id = v.id
+            JOIN usuario u ON a.vendedor_id = u.id
+            LEFT JOIN coche c ON v.id = c.id
+            LEFT JOIN furgoneta f ON v.id = f.id
+            LEFT JOIN moto m ON v.id = m.id
+            WHERE a.id = ? OR a.id = ?
+        """;
 
-        String sql = "DELETE FROM anuncio WHERE id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, anuncio.getId());
-            int rowsAffected = stmt.executeUpdate();
+            stmt.setInt(1, id1);
+            stmt.setInt(2, id2);
+            ResultSet rs = stmt.executeQuery();
 
-            if (rowsAffected > 0) {
-                onSuccess.run();
-            } else {
-                mostrarAlerta("No se encontró el anuncio con ID: " + anuncio.getId());
+            StringBuilder sb = new StringBuilder();
+            while (rs.next()) {
+                sb.append("\uD83D\uDCE2 Anuncio ID: ").append(rs.getInt("anuncio_id"))
+                  .append("\nPrecio: €").append(rs.getDouble("precio"))
+                  .append("\nDescripción: ").append(rs.getString("descripcion"))
+                  .append("\n\n\uD83D\uDE97 Vehículo:")
+                  .append("\nMarca: ").append(rs.getString("marca"))
+                  .append("\nModelo: ").append(rs.getString("modelo"))
+                  .append("\nAño: ").append(rs.getInt("año"))
+                  .append("\nKilometraje: ").append(rs.getInt("kilometraje"))
+                  .append(" km\n")
+                  .append("\n\uD83D\uDC64 Vendedor: ").append(rs.getString("vendedor_nombre"))
+                  .append(" (Email: ").append(rs.getString("email")).append(")\n");
+
+                if (rs.getString("carroceria") != null) {
+                    sb.append("Tipo: Coche\nCarrocería: ").append(rs.getString("carroceria"));
+                } else if (rs.getDouble("capacidadCarga") > 0) {
+                    sb.append("Tipo: Furgoneta\nCapacidad de carga: ").append(rs.getDouble("capacidadCarga")).append(" kg");
+                } else if (rs.getInt("cilindrada") > 0) {
+                    sb.append("Tipo: Moto\nCilindrada: ").append(rs.getInt("cilindrada")).append(" cc");
+                } else {
+                    sb.append("Tipo: Desconocido");
+                }
+                sb.append("\n---------------------------\n");
             }
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Comparación de Anuncios");
+            alert.setHeaderText(null);
+            TextArea area = new TextArea(sb.toString());
+            area.setEditable(false);
+            area.setWrapText(true);
+            alert.getDialogPane().setContent(area);
+            alert.getDialogPane().setPrefWidth(600);
+            alert.showAndWait();
+
         } catch (SQLException e) {
-            e.printStackTrace();
-            mostrarAlerta("Error al eliminar anuncio: " + e.getMessage());
+            mostrarAlerta("Error al comparar anuncios: " + e.getMessage());
         }
     }
 
@@ -161,7 +196,6 @@ public class ControllerAnuncio {
                     rs.getDouble("precio"),
                     rs.getString("descripcion"),
                     rs.getInt("vendedor_id")
-                
                 ));
             }
         } catch (SQLException e) {
@@ -184,7 +218,6 @@ public class ControllerAnuncio {
                     rs.getDouble("precio"),
                     rs.getString("descripcion"),
                     rs.getInt("vendedor_id")
-                
                 ));
             }
         } catch (SQLException e) {
@@ -207,7 +240,6 @@ public class ControllerAnuncio {
                     rs.getDouble("precio"),
                     rs.getString("descripcion"),
                     rs.getInt("vendedor_id")
-                    
                 ));
             }
         } catch (SQLException e) {
@@ -231,7 +263,6 @@ public class ControllerAnuncio {
                     rs.getDouble("precio"),
                     rs.getString("descripcion"),
                     rs.getInt("vendedor_id")
-                    
                 ));
             }
         } catch (SQLException e) {
@@ -251,7 +282,6 @@ public class ControllerAnuncio {
                     rs.getDouble("precio"),
                     rs.getString("descripcion"),
                     rs.getInt("vendedor_id")
-                    
                 );
             }
         } catch (SQLException e) {
@@ -271,7 +301,6 @@ public class ControllerAnuncio {
                     rs.getDouble("precio"),
                     rs.getString("descripcion"),
                     rs.getInt("vendedor_id")
-                    
                 );
             }
         } catch (SQLException e) {
@@ -280,97 +309,97 @@ public class ControllerAnuncio {
         }
         return null;
     }
+
     @FXML
-private void agregarAnuncio() {
-    mostrarFormularioAnuncio(null, () -> cargarTablaAnuncio());
-}
-
-@FXML
-private void editarAnuncio() {
-    var seleccionado = tableAnuncio.getSelectionModel().getSelectedItem();
-    if (seleccionado == null) {
-        mostrarAlerta("Seleccione un anuncio para editar.");
-        return;
-    }
-    mostrarFormularioAnuncio(seleccionado, () -> cargarTablaAnuncio());
-}
-
-@FXML
-private void eliminarAnuncio() {
-    var seleccionado = tableAnuncio.getSelectionModel().getSelectedItem();
-    if (seleccionado == null) {
-        mostrarAlerta("Seleccione un anuncio para eliminar.");
-        return;
+    private void agregarAnuncio() {
+        mostrarFormularioAnuncio(null, this::cargarTablaAnuncio);
     }
 
-    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Está seguro que desea eliminar el anuncio?", ButtonType.YES, ButtonType.NO);
-    confirm.showAndWait().ifPresent(response -> {
-        if (response == ButtonType.YES) {
-          eliminarAnuncio(seleccionado, () -> cargarTablaAnuncio());
+    @FXML
+    private void editarAnuncio() {
+        var seleccionado = tableAnuncio.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAlerta("Seleccione un anuncio para editar.");
+            return;
         }
-    });
-}
+        mostrarFormularioAnuncio(seleccionado, this::cargarTablaAnuncio);
+    }
+
+    @FXML
+    private void eliminarAnuncio() {
+        var seleccionado = tableAnuncio.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAlerta("Seleccione un anuncio para eliminar.");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Está seguro que desea eliminar el anuncio?", ButtonType.YES, ButtonType.NO);
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.YES) {
+                this.eliminarAnuncioPorId(seleccionado.getId(), this::cargarTablaAnuncio);
+            }
+        });
+    }
 
     public void eliminarAnuncioPorId(int id, Runnable onSuccess) {
-    String sql = "DELETE FROM anuncio WHERE id = ?";
-    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-        stmt.setInt(1, id);
-        int filasAfectadas = stmt.executeUpdate();
-        if (filasAfectadas > 0) {
-            onSuccess.run();
-        } else {
-            mostrarAlerta("No se encontró ningún anuncio con ID: " + id);
+        String sql = "DELETE FROM anuncio WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            int filasAfectadas = stmt.executeUpdate();
+            if (filasAfectadas > 0) {
+                onSuccess.run();
+            } else {
+                mostrarAlerta("No se encontró ningún anuncio con ID: " + id);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            mostrarAlerta("Error al eliminar anuncio: " + e.getMessage());
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
-        mostrarAlerta("Error al eliminar anuncio: " + e.getMessage());
+    }
+
+    public List<Anuncio> buscarAnunciosPorVendedorId(int vendedorId) {
+        List<Anuncio> resultados = new ArrayList<>();
+        String sql = "SELECT * FROM anuncio WHERE vendedor_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, vendedorId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Anuncio a = new Anuncio(
+                    rs.getInt("id"),
+                    rs.getInt("vehiculo_id"),
+                    rs.getDouble("precio"),
+                    rs.getString("descripcion"),
+                    rs.getInt("vendedor_id")
+                );
+                resultados.add(a);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            mostrarAlerta("Error al buscar anuncios: " + e.getMessage());
+        }
+        return resultados;
+    }
+
+    public List<Anuncio> buscarAnunciosPorPrecioAproximado(double precioBase) {
+        List<Anuncio> resultados = new ArrayList<>();
+        String sql = "SELECT * FROM anuncio WHERE precio BETWEEN ? AND ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setDouble(1, precioBase - 1000);
+            stmt.setDouble(2, precioBase + 1000);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                resultados.add(new Anuncio(
+                    rs.getInt("id"),
+                    rs.getInt("vehiculo_id"),
+                    rs.getDouble("precio"),
+                    rs.getString("descripcion"),
+                    rs.getInt("vendedor_id")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            mostrarAlerta("Error al buscar anuncios por precio: " + e.getMessage());
+        }
+        return resultados;
     }
 }
-public List<Anuncio> buscarAnunciosPorVendedorId(int vendedorId) {
-    List<Anuncio> resultados = new ArrayList<>();
-    String sql = "SELECT * FROM anuncio WHERE vendedor_id = ?";
-    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-        stmt.setInt(1, vendedorId);
-        ResultSet rs = stmt.executeQuery();
-        while (rs.next()) {
-            Anuncio a = new Anuncio(
-                rs.getInt("id"),
-                rs.getInt("vehiculo_id"),
-                rs.getDouble("precio"),
-                rs.getString("descripcion"),
-                rs.getInt("vendedor_id")
-            );
-            resultados.add(a);
-        }
-    } catch (SQLException e) {
-        e.printStackTrace();
-        mostrarAlerta("Error al buscar anuncios: " + e.getMessage());
-    }
-    return resultados;
-}
-public List<Anuncio> buscarAnunciosPorPrecioAproximado(double precioBase) {
-    List<Anuncio> resultados = new ArrayList<>();
-    String sql = "SELECT * FROM anuncio WHERE precio BETWEEN ? AND ?";
-    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-        stmt.setDouble(1, precioBase - 1000);
-        stmt.setDouble(2, precioBase + 1000);
-        ResultSet rs = stmt.executeQuery();
-        while (rs.next()) {
-            resultados.add(new Anuncio(
-                rs.getInt("id"),
-                rs.getInt("vehiculo_id"),
-                rs.getDouble("precio"),
-                rs.getString("descripcion"),
-                rs.getInt("vendedor_id")
-            ));
-        }
-    } catch (SQLException e) {
-        e.printStackTrace();
-        mostrarAlerta("Error al buscar anuncios por precio: " + e.getMessage());
-    }
-    return resultados;
-}
-
-
-
-} 
